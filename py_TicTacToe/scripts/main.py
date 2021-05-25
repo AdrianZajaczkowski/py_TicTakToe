@@ -1,1 +1,2 @@
-print('xD')
+from tkinter import *
+import numpy as np
