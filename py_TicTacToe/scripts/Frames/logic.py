@@ -5,10 +5,13 @@ from constants import SIZE, SYMBOL
 
 
 class Logic():
-    def __init__(self, window, canvas):
+    def __init__(self, window, canvas, rounds):
 
         self.window = window
-
+        self.winner = None
+        self.rounds = rounds
+        self.win = ''
+        self.window.title(f'Round: {self.rounds}')
         self.canvas = canvas
 
         self.turn_X = True
@@ -18,9 +21,7 @@ class Logic():
         self.gameover = False
         self.reset_board = False
         self.tie = False
-        self.X_score = 0
-        self.O_score = 0
-        self.tie_score = 0
+
         self.board_status = np.zeros(shape=(3, 3))
         self.symbol_s = SYMBOL["SIZE"]
         self.symbol_color_X = SYMBOL["X"]
@@ -33,7 +34,7 @@ class Logic():
         self.canvas.create_line(grid_pos[0]-self.symbol_s, grid_pos[1]-self.symbol_s, grid_pos[0] +
                                 self.symbol_s, grid_pos[1]+self.symbol_s, width=self.symbol_s,)
         self.canvas.create_line(grid_pos[0]-self.symbol_s, grid_pos[1]+self.symbol_s, grid_pos[0] +
-                                self.symbol_s, grid_pos[1]-self.symbol_s, width=self.symbol_s)
+                                self.symbol_s, grid_pos[1]-self.symbol_s, width=self.symbol_s, fill=self.symbol_color_X)
 
     def draw_O(self, logic_pos):
 
@@ -57,7 +58,7 @@ class Logic():
             return True
 
     def check_win(self, player):
-        player = [-1 if player == "X" else 1]
+        player = -1 if player == 'X' else 1
         for i in range(3):
             if self.board_status[i][0] == self.board_status[i][1] == self.board_status[i][2] == player:
                 return True
@@ -71,21 +72,48 @@ class Logic():
         return False
 
     def is_tie(self):
-        pass
+        r, c = np.where(self.board_status == 0)
+        tie = False
+        if len(r) == 0:
+            tie = True
 
-    def gameover(self):
-        self.X_win = self.check_win(("X"))
+        return tie
+
+    def is_gameover(self):
+        self.X_win = self.check_win('X')
         if not self.X_win:
-            self.O_win = self.check_win("O")
+            self.O_win = self.check_win('O')
         if not self.O_win:
             self.tie = self.is_tie()
 
         gameover = self.X_win or self.O_win or self.tie
-
+        if self.X_win:
+            self._winner('X won')
+        elif self.O_win:
+            self._winner('O won')
+        elif self.tie:
+            self._winner('is a tie')
         return gameover
 
     def gameover_window(self):
-        pass
+        self.reset_board = True
+
+    def _winner(self, win):
+        self.winner = tk.Tk()
+        positionRight = int(
+            self.window.winfo_screenwidth()/2 - SIZE["WIDTH"]/4)
+        positionDown = int(
+            self.window.winfo_screenheight()/2 - SIZE["WIDTH"]/4+20)
+        self.winner.geometry("+{}+{}".format(positionRight, positionDown))
+        self.button = tk.Button(self.winner, text=win, command=self._clean)
+        self.button.config(font=('Helvetica bold', 40))
+        self.button.pack()
+        self.winner.title('Winner')
+
+    def _clean(self):
+        self.winner.destroy()
+        self.window.destroy()
+        self.reset_board = False
 
     def click(self, event):
 
@@ -98,15 +126,11 @@ class Logic():
                     self.board_status[logic_position[0]
                                       ][logic_position[1]] = -1
                     self.turn_X = not self.turn_X
-                else:
-                    if not self.ocuupied_place(logic_position):
-                        self.draw_O(logic_position)
-                        self.board_status[logic_position[0]
-                                          ][logic_position[1]] = 1
-                        self.turn_X = not self.turn_X
-
-        '''if self.gameover():
-                    self.gameover_window()
-        else:
-            self.canvas.delete("all")
-'''
+            else:
+                if not self.ocuupied_place(logic_position):
+                    self.draw_O(logic_position)
+                    self.board_status[logic_position[0]
+                                      ][logic_position[1]] = 1
+                    self.turn_X = not self.turn_X
+            if self.is_gameover():
+                self.gameover_window()

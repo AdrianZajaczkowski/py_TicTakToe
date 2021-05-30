@@ -6,19 +6,22 @@ from logic import Logic
 
 
 class Board(tk.Toplevel):
-    def __init__(self, app):
-
+    def __init__(self, rounds):
+        self.rounds = rounds
         #self.backWindow = app
-        self.window = app
+        self.window = tk.Tk()
+        positionRight = int(
+            self.window.winfo_screenwidth()/2 - SIZE["WIDTH"]/2)
+        positionDown = int(
+            self.window.winfo_screenheight()/2 - SIZE["WIDTH"]/2)
 
         self.canvas = tk.Canvas(
             self.window, width=SIZE["WIDTH"], height=SIZE["HEIGHT"])
         self.canvas.pack()
-
-        self.window.title("Start")
-
+        self.window.geometry("+{}+{}".format(positionRight, positionDown))
         self.drawBoard()
-        Logic(self.window, self.canvas)
+
+        Logic(self.window, self.canvas, self.rounds)
         self.window.mainloop
 
     def mainloop(self):
